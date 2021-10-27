@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Обработка на данни</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link href="http://cdn.jsdelivr.net/webjars/bootstrap/3.3.4/css/bootstrap.min.css"
+          th:href="@{/webjars/bootstrap/3.3.5/css/bootstrap.min.css}"
+          rel="stylesheet" media="screen"/>
+
+    <script src="http://cdn.jsdelivr.net/webjars/jquery/2.1.4/jquery.min.js"
+            th:src="@{/webjars/jquery/2.1.4/jquery.min.js}"></script>
+
+    <script
+            src="https://code.jquery.com/jquery-3.5.1.js"
+            integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+            crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+            integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+            crossorigin="anonymous"></script>
+
+    <style>
+        table, th, td {
+            border: 2px solid white;
+            padding: 5px;
+            margin: 5px;
+            width: 100%;
+            hyphens: auto;
+        }
+    </style>
+</head>
+<body>
+<th:div class="container" id="peopleInput">
+    <form th:action="@{/people}" th:object="${peopleForm}" method="post"  class="container alert alert-info">
+        <br/><br/>
+        <H3 class="text-center">Създаване / Редакция / Изтриване на данни</H3>
+        <br/>
+        <div th:if="${message}" th:text="${message}" th:class="${'alert ' + alertClass}" />
+        <br/>
+        <div class="row">
+            <div class="col-lg-1">
+                <label class="labelWidthExtra" > Име *:</label>
+            </div>
+            <div class="col-lg-6" >
+                <input type="text" th:field="*{people.fullName}" required="true" style="width:100%"
+                       oninvalid="this.setCustomValidity('Името е задължително поле.')"
+                       oninput="this.setCustomValidity('')" />
+                <span th:style="'color: red;'" th:if="${#fields.hasErrors('people.fullName')}" th:errors="*{people.fullName}" />
+
+            </div>
+            <div class="col-lg-2">
+                <label class="labelWidthExtra" > ПИН:</label>
+            </div>
+            <div class="col-lg-3 " >
+                <input type="text" th:field="*{people.pin}" style="width:100%" />
+                <span th:style="'color: red; text-align: center;'" th:if="${#fields.hasErrors('people.pin')}" th:errors="*{people.pin}" />
+            </div>
+        </div>
+        </div>
+        <br/><br/>
+        <div class="row">
+            <div class="col-lg-1">
+                <label class="labelWidthExtra" > Адрес:</label>
+            </div>
+            <div class="col-lg-6">
+                <input type="text" th:field="*{people.address.addressInfo}" style="width:100%" />
+
+            </div>
+            <div class="col-lg-2">
+                <label class="labelWidthExtra" > Тип на адреса*:</label>
+            </div>
+            <div class="col-lg-3">
+                <select id="addressType" th:field="*{people.address.addressType}" style="width:150px;" title="Изберете тип на адреса">
+                    <option th:each="addressType : *{allAddressTypes}"
+                            th:text="${addressType.addressTypeName}"
+                            th:value="${addressType.addressTypeCode}">
+                    </option>
+                </select>
+            </div>
+        </div>
+        <br/><br/>
+        <div class="row">
+            <div class="col-lg-1">
+                <label class="labelWidthExtra" > E-mail:</label>
+            </div>
+            <div class="col-lg-6 invalid-feedback">
+                <input type="text" th:field="*{people.mail.email}" style="width:100%" />
+              <span th:style="'color: red;'" th:if="${#fields.hasErrors('people.mail.email')}" th:errors="*{people.mail.email}"/>
+
+            </div>
+            <div class="col-lg-2">
+                <label class="labelWidthExtra" > Тип на E-mail*:</label>
+            </div>
+            <div class="col-lg-3">
+                <select id="emailType" th:field="*{people.mail.emailType}" style="width:150px;" title="Изберете тип на адреса">
+                    <option th:each="emailType : *{allMailTypes}"
+                            th:text="${emailType.emailTypeName}"
+                            th:value="${emailType.emailTypeCode}">
+                    </option>
+                </select>
+            </div>
+        </div>
+        <br/><br/>
+        <button type="button" id="cleanFieldsId"  class="btn btn-primary pull-left" style="text-align: center;"  onclick="cleanPeopleFunc()"><span class="glyphicon glyphicon-erase"> Изчисти полетата</span></button>
+        <input type="submit" value="Запишете данните" class="btn btn-primary pull-right" style="text-align: center;"/>
+        <br/><br/>
+        <hr style="border: 2px solid white;"/>
+        <br/><br/>
+        <script th:inline="javascript">
+                            /*<![CDATA[*/
+                            function searchPeopleFunc() {
+                            var name = $("#name").val();
+
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "/searchPeople?name=" + name,
+                                        contentType: 'text/plain; charset=UTF-8',
+                                        success: function (response) {
+                                        var placeholder = document.getElementById("peopleTable");
+                                        placeholder.innerHTML = "";
+                                        $("#peopleInput").html(response);
+                                        }
+                                    });
+                            }
+                            /*]]>*/
+        </script>
+        <script th:inline="javascript">
+                        /*<![CDATA[*/
+                            function cleanPeopleFunc() {
+                                    $.ajax({
+                                            type: "GET",
+                                            url: "/people/clean",
+                                            contentType: 'text/plain; charset=UTF-8',
+                                            success: function (response) {
+                                            var placeholder = document.getElementById("peopleTable");
+                                            placeholder.innerHTML = "";
+                                            $("#peopleInput").html(response);
+                                        }
+                                    });
+                            }
+                        /*]]>*/
+        </script>
+        <div class="row">
+            <div class="col-lg-5">
+                <label class="labelWidthExtra"> Търсене по име:
+                    <input type="text" th:field="*{name}" id="name" title="Име за търсене"/>
+                </label>
+            </div>
+            <div class="col-lg-2">
+                <button type="button" id="searchId"  class="btn btn-primary"  onclick="searchPeopleFunc()"><span class="glyphicon glyphicon-search"> Търси</span></button>
+            </div>
+            <div class="col-lg-5">
+                <button type="button" id="cleanId"  class="btn btn-primary pull-right" style="text-align: center;"  onclick="cleanPeopleFunc()"><span class="glyphicon glyphicon-erase"> Изчисти резултатът от търсенето</span></button>
+            </div>
+        </div>
+        <br/>
+        <hr style="border: 2px solid white;"/>
+        <br/>
+        <H3 class="text-center">Регистрирани лица в системата</H3>
+        <br/>
+        <div id="peopleTable" style="height:300px;overflow:auto;">
+            <!--<table id="dtHorizontalExample" class="table table-striped table-bordered table-sm" cellspacing="0"-->
+                   <!--width="100%">-->
+            <table id="pt" >
+            <!--<table id="pt"  class="table table-sm"  >-->
+                <tr>
+                    <th>Име</th>
+                    <th>ПИН</th>
+                    <th>Адрес</th>
+                    <th>Тип адрес</th>
+                    <th>E-mail</th>
+                    <th>Тип E-mail</th>
+                    <th>Редакция</th>
+                    <th>Изтриване</th>
+                </tr>
+                <tr th:each="p : *{allPeoples}" >
+                    <td th:text="${p.fullName}" ></td>
+                    <td th:text="${p.pin}" ></td>
+                    <td th:text="${p.address?.addressInfo}" ></td>
+                    <td th:text="${p.address?.addressType?.addressTypeName}" ></td>
+                    <td th:text="${p.mail?.email}" ></td>
+                    <td th:text="${p.mail?.emailType?.emailTypeName}" ></td>
+                    <script th:inline="javascript">
+                            /*<![CDATA[*/
+                            function editPeopleFunc(currentPeople) {
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "/editPeopleData?peopleId=" + currentPeople.value,
+                                        contentType: 'text/plain; charset=UTF-8',
+                                        success: function (response) {
+                                        var placeholder = document.getElementById("peopleTable");
+                                        placeholder.innerHTML = "";
+                                        $("#peopleInput").html(response);
+                                        }
+                                    });
+                            }
+                            /*]]>*/
+                        </script>
+                    <td style="border: 1px solid white; text-align: center; padding: 5px;" >
+                        <button type="button" id="editPeople_${p.id}"  class="btn btn-secondary" th:value="${p.id}"
+                                onclick="editPeopleFunc(this)"><span class="glyphicon glyphicon-pencil"> Редактирай</span></button>
+                    </td>
+                    <td style="border: 1px solid white; text-align: center; padding: 5px;" >
+                        <script th:inline="javascript">
+                            /*<![CDATA[*/
+                            function deletePeopleFunc(currentPeople) {
+                            currentPeopleId = currentPeople.value;
+                            return $("#deleteModal").modal('show');
+
+
+
+
+                                    <!--$.ajax({-->
+                                        <!--type: "POST",-->
+                                        <!--url: "/deletePeopleData?peopleId=" + currentPeople.value,-->
+                                        <!--contentType: 'text/plain; charset=UTF-8',-->
+                                        <!--success: function () {-->
+                                            <!--location.reload();-->
+                                        <!--}-->
+                                    <!--});-->
+                            }
+                            /*]]>*/
+                        </script>
+                        <button type="button" id="deletePeople_${p.id}"  class="btn btn-secondary"
+                                th:value="${p.id}" onclick="deletePeopleFunc(this)"><span class="glyphicon glyphicon-trash"> Изтрий</span></button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+                 function dismissDeleteFunc() {
+                    return false;
+                 }
+             /*]]>*/
+        </script>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+                 function confirmDeleteFunc() {
+                    $.ajax({
+                       type: "POST",
+                       url: "/deletePeopleData?peopleId=" + currentPeopleId,
+                       contentType: 'text/plain; charset=UTF-8',
+                       success: function () {
+                        location.reload();
+                       }
+                    });
+                    true;
+                 }
+             /*]]>*/
+        </script>
+
+        <div class="modal" id="deleteModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Внимание, лицето ще бъде премахнато от системата!</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Сигурни ли сте, че искате да го премахнете?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <a  href="javascript: void(0);" id="confirmDelete" class="btn btn-success success" data-dismiss="modal" onclick="confirmDeleteFunc()">Да</a>
+                        <a  href="javascript: void(0);" id="rejectDelete" class="btn btn-default" data-dismiss="modal" onclick="dismissDeleteFunc()">Не</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</th:div>
+</body>
+</html>
